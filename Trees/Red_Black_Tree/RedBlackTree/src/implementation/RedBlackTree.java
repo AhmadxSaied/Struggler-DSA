@@ -120,9 +120,55 @@ private void rightrotate(Node<K,V> node){
     temp.rightChild = node;
     node.isLeftChild = false;
 }
-private void leftrotate(Node<K,V> node){}
-private void rightleftrotate(Node<K,V> node){}
-private void leftrightrotate(Node<K,V> node){}
-private void colorfix(Node<K,V> node){}
+private void leftrotate(Node<K,V> node){
 
+    //node is the grandparent
+
+    Node<K,V> temp = node.rightChild; // parent node of recently inserted
+
+
+    node.rightChild = temp.leftChild; // child left subtree is the parent new right subtree
+
+    if(node.rightChild!=null){ // if there is a leftsubtree existing
+        node.rightChild.parent = node;
+        node.rightChild.isLeftChild=false;
+    }
+
+    if(node.parent == null){ //we are at the root
+        this.root = temp;
+        temp.parent = null;
+    }else{
+        if(node.isLeftChild){
+            node.parent.leftChild =temp;
+            temp.isLeftChild=true;
+        }else{
+            node.parent.rightChild = temp;
+            temp.isLeftChild = false;
+        }
+        temp.parent = node.parent;
+    }
+
+
+    node.parent = temp;
+    temp.leftChild = node;
+    node.isLeftChild= true;
+    
+}
+private void rightleftrotate(Node<K,V> node){
+    rightrotate(node.parent);
+    leftrotate(node);
+}
+private void leftrightrotate(Node<K,V> node){
+    leftrotate(node.parent);
+    rightrotate(node);
+}
+private void colorfix(Node<K,V> node){
+    node.black = false;
+    if(node.leftChild!=null){
+        node.leftChild.black=true;
+    }
+    if(node.rightChild!=null){
+        node.rightChild.black=true;
+    }
+}
 }
