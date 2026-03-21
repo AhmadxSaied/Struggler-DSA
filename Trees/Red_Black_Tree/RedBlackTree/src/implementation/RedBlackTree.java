@@ -2,8 +2,8 @@ package implementation;
 
 public class RedBlackTree<K extends Comparable<K>, V> {
     private int size;
-    public Node root;
-    public final  Node NIL;
+    private  Node root;
+    private  final  Node NIL;
 
     public RedBlackTree() {
         NIL = new Node(null,null);
@@ -13,14 +13,14 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         size=0;
     }
 
-    public class Node implements Comparable<Node> {
+    private  class Node implements Comparable<Node> {
 
         private K key;
         private V value;
         private boolean black;
-        public Node leftChild;
-        public Node rightChild;
-        public Node parent;
+        private  Node leftChild;
+        private  Node rightChild;
+        private  Node parent;
 
         public Node(K key, V value) {
             this.key = key;
