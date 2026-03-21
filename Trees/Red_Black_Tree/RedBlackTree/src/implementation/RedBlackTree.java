@@ -2,57 +2,68 @@ package implementation;
 
 public class RedBlackTree<K extends Comparable<K>, V> {
     private int size;
-    private Node<K, V> root = null;
+    public Node root;
+    public final  Node NIL;
 
-    private class Node<K extends Comparable<? super K>, V> implements Comparable<Node<K, V>> {
+    public RedBlackTree() {
+        NIL = new Node(null,null);
+        NIL.black = true;
+        NIL.leftChild = NIL.rightChild = NIL.parent =NIL;
+        root = NIL;
+        size=0;
+    }
+
+    public class Node implements Comparable<Node> {
 
         private K key;
         private V value;
         private boolean black;
-        private boolean isLeftChild;
-        private Node<K, V> leftChild;
-        private Node<K, V> rightChild;
-        private Node<K, V> parent;
+        public Node leftChild;
+        public Node rightChild;
+        public Node parent;
 
         public Node(K key, V value) {
             this.key = key;
             this.value = value;
             this.black = false;
-            this.leftChild = this.rightChild = this.parent = null;
-            this.isLeftChild = false;
+            this.leftChild = NIL;
+            this.rightChild = NIL;
+            this.parent = NIL;
         }
 
         @Override
-        public int compareTo(Node<K, V> node) {
+        public int compareTo(Node node) {
             return this.key.compareTo(node.key);
         }
 
+        @Override
+        public String toString() {
+        return key + (black ? "[B]" : "[R]");
+        }   
     }
 
     public void insert(K key, V value) {
-        Node<K, V> new_node = new Node<>(key, value);
-        if (this.root == null) {
+        Node new_node = new Node(key, value);
+        if (this.root == NIL) {
             this.root = new_node;
             this.root.black = true;
             size++;
             return;
         }
 
-        Node<K, V> node = this.root;
-        while (node != null) {
+        Node node = this.root;
+        while (node != NIL) {
             if (node.compareTo(new_node) > 0) {// the new node is smaller
-                if (node.leftChild == null) {
+                if (node.leftChild == NIL) {
                     node.leftChild = new_node;
                     new_node.parent = node;
-                    new_node.isLeftChild = true;
                     break;
                 }
                 node = node.leftChild;
             } else if (node.compareTo(new_node) < 0) {
-                if (node.rightChild == null) {
+                if (node.rightChild == NIL) {
                     node.rightChild = new_node;
                     new_node.parent = node;
-                    new_node.isLeftChild = false;
                     break;
                 }
                 node = node.rightChild;
@@ -62,24 +73,22 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             }
         }
         size++;
+        if(new_node.parent.parent ==NIL) return;
         insertionFix(new_node);
         root.black = true;
     }
 
-    private void insertionFix(Node<K, V> Issue_node) {
+    private void insertionFix(Node Issue_node) {
 
-        Node<K, V> node = Issue_node;
+        Node node = Issue_node;
 
         while (node != root && !node.parent.black) {
 
+                if (node.parent == node.parent.parent.leftChild) {
 
-            if (node.isLeftChild) {
+                    Node uncle = node.parent.parent.rightChild;
 
-                if (node.parent.isLeftChild) {
-
-                    Node<K, V> uncle = node.parent.parent.rightChild;
-
-                    if (uncle != null && !uncle.black) {
+                    if (!uncle.black) {
 
                         node.parent.parent.black = false;
                         node.parent.black = true;
@@ -91,43 +100,23 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                     // we do right rotate
                     // uncle == null || uncle.blac
                     else {
+                        if(node == node.parent.rightChild){
+                            node = node.parent;
+                            leftrotate(node);
+                        }
 
                         node.parent.black = true;
                         node.parent.parent.black = false;
-
                         rightrotate(node.parent.parent);
                         break;
                     }
 
-                } else {
+                } 
+             else {
 
-                    Node<K, V> uncle = node.parent.parent.leftChild;
+                    Node uncle = node.parent.parent.leftChild;
 
-                    if (uncle != null && !uncle.black) {
-
-                        node.parent.parent.black = false;
-                        node.parent.black = true;
-                        uncle.black = true;
-
-                        node = node.parent.parent;
-
-                    } else {
-
-                        node.parent.black = false;
-                        node.parent.parent.black = false;
-                        node.black = true;
-                        rightleftrotate(node);
-                        break;
-                    }
-                }
-
-
-            } else {
-                if (!node.parent.isLeftChild) {
-
-                    Node<K, V> uncle = node.parent.parent.leftChild;
-
-                    if (uncle != null && !uncle.black) {
+                    if ( !uncle.black) {
 
                         node.parent.black = true;
                         uncle.black = true;
@@ -139,143 +128,107 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                     // uncle == null || uncle.black
 
                     else {
+                        if(node == node.parent.leftChild){
+                            node = node.parent;
+                            rightrotate(node);
+                        }
                         node.parent.black = true;
                         node.parent.parent.black = false;
                         leftrotate(node.parent.parent);
                         break;
                     }
 
-                } else {
-                    Node<K, V> uncle = node.parent.parent.rightChild;
-
-                    if (uncle != null && !uncle.black) {
-
-                        node.parent.black = true;
-                        uncle.black = true;
-                        node.parent.parent.black = false;
-
-                        node = node.parent.parent;
-                    } else {
-
-                        node.parent.black = false;
-                        node.parent.parent.black = false;
-                        node.black = true;
-                        leftrightrotate(node);
-                        break;
-                    }
-                }
             }
         }
         root.black = true;
     }
 
-    private void rightrotate(Node<K, V> node) {
+    private void rightrotate(Node node) {
         // node is the grandparent
-        Node<K, V> temp = node.leftChild; // parent
+        Node temp = node.leftChild; // parent
 
         // we want the child right subtree to be the parent left subtree
         node.leftChild = temp.rightChild;
 
-        if (node.leftChild != null) {
+        if (node.leftChild != NIL) {
             // we were a right child now we are left
-            node.leftChild.isLeftChild = true;
+
             node.leftChild.parent = node;
         }
 
         // if the grandparent is the root then the temp is the new root
-        if (node.parent == null) {
+        temp.parent = node.parent;
+        if (node.parent == NIL) {
             this.root = temp;
-            temp.parent = null;
         } else {
-            temp.parent = node.parent;
-            if (node.isLeftChild) {
+            
+            if (node == node.parent.leftChild) {
                 node.parent.leftChild = temp;
-                temp.isLeftChild = true;
+
             } else {
                 node.parent.rightChild = temp;
-                temp.isLeftChild = false;
+
             }
         }
         node.parent = temp;
         temp.rightChild = node;
-        node.isLeftChild = false;
+
     }
 
-    private void leftrotate(Node<K, V> node) {
+    private void leftrotate(Node node) {
 
         // node is the grandparent
 
-        Node<K, V> temp = node.rightChild; // parent node of recently inserted
+        Node temp = node.rightChild; // parent node of recently inserted
 
         node.rightChild = temp.leftChild; // child left subtree is the parent new right subtree
 
-        if (node.rightChild != null) { // if there is a leftsubtree existing
+        if (node.rightChild != NIL) { // if there is a leftsubtree existing
             node.rightChild.parent = node;
-            node.rightChild.isLeftChild = false;
+
         }
 
-        if (node.parent == null) { // we are at the root
+        temp.parent = node.parent;
+        if (node.parent == NIL) { // we are at the root
             this.root = temp;
-            temp.parent = null;
         } else {
-            if (node.isLeftChild) {
+            if (node == node.parent.leftChild) {
                 node.parent.leftChild = temp;
-                temp.isLeftChild = true;
+
             } else {
                 node.parent.rightChild = temp;
-                temp.isLeftChild = false;
+
             }
-            temp.parent = node.parent;
+            
         }
 
         node.parent = temp;
         temp.leftChild = node;
-        node.isLeftChild = true;
+
 
     }
-
-    private void rightleftrotate(Node<K, V> node) {
-
-        Node<K, V> parent = node.parent;
-        Node<K, V> grand = parent.parent;
-
-        rightrotate(parent);
-        leftrotate(grand);
-
-    }
-
-    private void leftrightrotate(Node<K, V> node) {
-
-        Node<K, V> parent = node.parent;
-        Node<K, V> grand = parent.parent;
-
-        leftrotate(parent);
-        rightrotate(grand);
-
-    }
-
     public int height() {
-        Node<K, V> node = root;
+        Node node = root;
 
-        return node == null ? 0 : height(node) - 1;
+        return node == NIL ? 0 : height(node) - 1;
     }
 
-    private int height(Node<K, V> node) {
-        if (node == null)
+    private int height(Node node) {
+        if (node == NIL)
             return 0;
 
         return Math.max(height(node.leftChild) + 1, height(node.rightChild) + 1);
     }
 
     public V Search(K key) {
-        Node<K, V> node = Search_node(key);
-        return node == null ? null : node.value;
+        Node node = Search_node(key);
+        return node == NIL ? null : node.value;
     }
 
-    private Node<K, V> Search_node(K key) {
-        Node<K, V> node = this.root;
+    private Node Search_node(K key) {
+        Node node = this.root;
 
-        while (node != null) {
+        while (node != NIL) {
             if (node.key.compareTo(key) == 0) {
                 return node;
             } else if (node.key.compareTo(key) > 0) {
@@ -284,13 +237,13 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                 node = node.rightChild;
             }
         }
-        return null;
+        return NIL;
     }
 
     public boolean Delete(K key) {
-        Node<K, V> found_node = Search_node(key);
+        Node found_node = Search_node(key);
 
-        if (found_node == null)
+        if (found_node == NIL)
             return false;
 
         // we keep track of the node that will be switched with the deleted if node has
@@ -298,10 +251,10 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         // if the node has one the plucked out will be the deleted node itself no
         // switching
 
-        Node<K, V> plucked_out = found_node;
+        Node plucked_out = found_node;
 
         // we keep track of the node that we will do our fixing from
-        Node<K, V> fixup_point;
+        Node fixup_point;
 
         // capture switching node for fixup condition original color
         boolean trouble_color = plucked_out.black;
@@ -310,7 +263,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 
         // case 1 i have no left child
 
-        if (plucked_out.leftChild == null) {
+        if (plucked_out.leftChild == NIL) {
 
             fixup_point = found_node.rightChild;
 
@@ -319,7 +272,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             Transplant(found_node, found_node.rightChild);
             // no point in adjusting the left pointer as it is null
 
-        } else if (plucked_out.rightChild == null) {
+        } else if (plucked_out.rightChild == NIL) {
 
             fixup_point = found_node.leftChild;
 
@@ -345,9 +298,8 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             // if plucked out is directly the right child of deleted we correct pointers
 
             if (plucked_out.parent == found_node) { // im right child of node to be deleted
-                if (fixup_point != null){
                     fixup_point.parent = plucked_out; 
-                }
+                
             } else {
 
                 // if the successor has a right subtree we put it inplace of the plucked out
@@ -358,7 +310,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                 // adjusted before transplant
                 plucked_out.rightChild = found_node.rightChild;
                 plucked_out.rightChild.parent = plucked_out;
-                plucked_out.rightChild.isLeftChild = false;
+
             }
             // transplant maked the plcuked node that is connected with the deleted right
             // subtree take the deleted node position
@@ -367,7 +319,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             // we adjust pointers with left subtree
             plucked_out.leftChild = found_node.leftChild;
             plucked_out.leftChild.parent = plucked_out;
-            plucked_out.leftChild.isLeftChild = true;
+
             plucked_out.black = found_node.black;
 
         }
@@ -376,43 +328,38 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             
             deleteFix(fixup_point);
             
-            this.root.black = true;
         }
-
+        size--;
         return true;
 
     }
 
     // transplat moves an entire subtree to its position after deletion
-    private void Transplant(Node<K, V> u, Node<K, V> v) {
-        if (u.parent == null) {
+    private void Transplant(Node u, Node v) {
+        if (u.parent == NIL) {
             this.root = v;
-            if(v!=null) v.parent = null;
-            return;
         }
-        if (u.parent.leftChild == u) {
+        else if (u.parent.leftChild == u) {
             u.parent.leftChild = v;
-            if(v!=null)v.isLeftChild=true;
         }
-        if (u.parent.rightChild == u) {
+        else if (u.parent.rightChild == u) {
 
             u.parent.rightChild = v;
-            if(v!=null)v.isLeftChild=false;
         }
-        if (v != null)
-            v.parent = u.parent;
+
+                v.parent = u.parent;
     }
 
-    private Node<K, V> getMin(Node<K, V> rootofsearch) {
-        Node<K, V> y = rootofsearch;
-        while (y.leftChild != null) {
+    private Node getMin(Node rootofsearch) {
+        Node y = rootofsearch;
+        while (y.leftChild != NIL) {
             y = y.leftChild;
         }
         return y;
     }
 
-    private void deleteFix(Node<K, V> node) {
-        Node<K, V> x = node;
+    private void deleteFix(Node node) {
+        Node x = node;
 
         // we have 4 cases
         // Angry == red color && calm == black color
@@ -439,13 +386,13 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         // sibling switch moods with my father and my father becomes calm
         // and my parent rotates at me
 
-        while (x != null && x != this.root && x.black) {
-            if (x.isLeftChild) {
+        while (x != this.root && x.black) {
+            if (x == x.parent.leftChild) {
 
-                Node<K, V> my_sibling = x.parent.rightChild;
+                Node my_sibling = x.parent.rightChild;
 
                 // case 1 my sibling is angry
-                if (my_sibling!=null && !my_sibling.black) {
+                if (!my_sibling.black) {
 
                     // sibling calms down
                     my_sibling.black = true;
@@ -458,34 +405,35 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                 }
 
                 // my sibling is calm and so are his children
-                else if (my_sibling == null ||blackChildren(my_sibling)) {
+                if (blackChildren(my_sibling)) {
 
-                    if(my_sibling!=null)
+                    
                         // my father gets angry so me try to resolve from him
-                        my_sibling.black = false;
+                    my_sibling.black = false;
                     x = x.parent;
 
                 }
                 // my sibling far child is calm
-                else if (my_sibling.rightChild == null ||my_sibling.rightChild.black) {
+                else {
+                    if (my_sibling.rightChild.black) {
 
-                    if(my_sibling.leftChild != null)
-                        // the other child gets calm
-                        my_sibling.leftChild.black = true;
+                    
+                    // the other child gets calm
+                    my_sibling.leftChild.black = true;
 
                     // the father gets angry and rolls away from me
                     my_sibling.black = false;
                     rightrotate(my_sibling);
 
                     my_sibling = x.parent.rightChild;
-                } else { // the far child is angry
+                }  // the far child is angry
 
                     // my sibling mood become like my father
                     my_sibling.black = x.parent.black;
 
-                    if(my_sibling.rightChild != null)
+                
                         // his son becomes calm
-                        my_sibling.rightChild.black = true; 
+                    my_sibling.rightChild.black = true; 
 
                     // my father calm down
                     x.parent.black = true;
@@ -493,14 +441,15 @@ public class RedBlackTree<K extends Comparable<K>, V> {
                     // my father rotates towards me
                     leftrotate(x.parent);
                     x = this.root;
-                }
+                
+            }
 
             } else {
                 // im a right sibling
 
-                Node<K, V> my_sibling = x.parent.leftChild;
+                Node my_sibling = x.parent.leftChild;
 
-                if (my_sibling!=null && !my_sibling.black) {
+                if (!my_sibling.black) {
 
                     my_sibling.black = true;
 
@@ -509,42 +458,44 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 
                     my_sibling = x.parent.leftChild;
 
-                } else if (my_sibling == null ||blackChildren(my_sibling)) {
+                } 
+                if (blackChildren(my_sibling)) {
 
-                    if(my_sibling!=null)
-                        my_sibling.black = false;
+                    
+                   my_sibling.black = false;
 
                     x = x.parent;
 
-                } else if (my_sibling.leftChild ==null || my_sibling.leftChild.black) {
+                } else{ 
+                    if (my_sibling.leftChild.black) {
 
-                    if(my_sibling.rightChild != null)
-                        my_sibling.rightChild.black = true;
+                    
+                    my_sibling.rightChild.black = true;
 
                     my_sibling.black = false;
                     leftrotate(my_sibling);
 
                     my_sibling = x.parent.leftChild;
-                } else {
+                } 
 
                     my_sibling.black = x.parent.black;
                     x.parent.black = true;
-
-                    if(my_sibling.leftChild != null)
-                        my_sibling.leftChild.black = true;
+                    my_sibling.leftChild.black = true;
 
                     
                     rightrotate(x.parent);
 
                     x = this.root;
-                }
+                
             }
         }
+        }
+        if(x!=NIL)  x.black = true;
         this.root.black =true;
     }
 
-    private boolean blackChildren(Node<K, V> node) {
-        return (node.leftChild == null || node.leftChild.black)
-                && (node.rightChild == null || node.rightChild.black);
+    private boolean blackChildren(Node node) {
+        return (node.leftChild == NIL || node.leftChild.black)
+                && (node.rightChild == NIL || node.rightChild.black);
     }
 }
