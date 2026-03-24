@@ -382,9 +382,12 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 
         // case 4
         // my sibling is calm and his child that is far from me is angry
-        // i tell him to calm him down so he does so and becomed
+        // i tell him to calm him down so he does so and becomed calm
         // sibling switch moods with my father and my father becomes calm
         // and my parent rotates at me
+
+        // case 1 leads to -> case 2 or 3
+        // case 3 -> leads to 4
 
         while (x != this.root && x.black) {
             if (x == x.parent.leftChild) {
