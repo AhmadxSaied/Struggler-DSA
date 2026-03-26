@@ -1,5 +1,8 @@
 package implementation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RedBlackTree<K extends Comparable<K>, V> {
     private int size;
     private  Node root;
@@ -9,18 +12,20 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         NIL = new Node(null,null);
         NIL.black = true;
         NIL.leftChild = NIL.rightChild = NIL.parent =NIL;
+        NIL.sub_size=0;
         root = NIL;
         size=0;
     }
 
     private  class Node implements Comparable<Node> {
 
-        private K key;
+        private final K key;
         private V value;
         private boolean black;
         private  Node leftChild;
         private  Node rightChild;
         private  Node parent;
+        private int sub_size;
 
         public Node(K key, V value) {
             this.key = key;
@@ -29,6 +34,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             this.leftChild = NIL;
             this.rightChild = NIL;
             this.parent = NIL;
+            this.sub_size = 1;
         }
 
         @Override
@@ -38,7 +44,10 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 
         @Override
         public String toString() {
-        return key + (black ? "[B]" : "[R]");
+            
+            return "Node [key=" + key + ", value=" + value + ", black=" + black + ", leftChild=" + ((leftChild ==NIL) ? "" :leftChild)
+                    + ", rightChild=" + ((rightChild==NIL)?"":rightChild) + ", size=" + sub_size + "]";
+            
         }   
     }
 
@@ -73,9 +82,12 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             }
         }
         size++;
-        if(new_node.parent.parent ==NIL) return;
+
+        if(new_node.parent.parent ==NIL) {updateSize(new_node);return;}
         insertionFix(new_node);
         root.black = true;
+        updateSize(new_node);
+        
     }
 
     private void insertionFix(Node Issue_node) {
@@ -173,6 +185,11 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         node.parent = temp;
         temp.rightChild = node;
 
+        
+
+        node.sub_size = node.leftChild.sub_size + node.rightChild.sub_size + 1;
+        temp.sub_size = temp.leftChild.sub_size + temp.rightChild.sub_size + 1;
+
     }
 
     private void leftrotate(Node node) {
@@ -205,6 +222,8 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         node.parent = temp;
         temp.leftChild = node;
 
+        node.sub_size = node.leftChild.sub_size + node.rightChild.sub_size + 1;
+        temp.sub_size = temp.leftChild.sub_size + temp.rightChild.sub_size + 1;
 
     }
     public int height() {
@@ -321,7 +340,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             plucked_out.leftChild.parent = plucked_out;
 
             plucked_out.black = found_node.black;
-
+            updateSize(plucked_out);
         }
 
         if (trouble_color){
@@ -347,7 +366,21 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             u.parent.rightChild = v;
         }
 
-                v.parent = u.parent;
+                
+        if(v != NIL){
+            v.parent = u.parent;
+            updateSize(v);
+        }
+        else if(u.parent != NIL) updateSize(u.parent);
+    }
+
+
+    private void updateSize(Node node){
+        Node climber = node;
+        while(climber != NIL){
+            climber.sub_size = climber.leftChild.sub_size + climber.rightChild.sub_size +1 ;
+            climber = climber.parent; 
+        }
     }
 
     private Node getMin(Node rootofsearch) {
@@ -500,5 +533,55 @@ public class RedBlackTree<K extends Comparable<K>, V> {
     private boolean blackChildren(Node node) {
         return (node.leftChild == NIL || node.leftChild.black)
                 && (node.rightChild == NIL || node.rightChild.black);
+    }
+
+    public Integer select(int order){
+        if(order <= 0 || order > size) return null;
+        return select(root, order).sub_size;
+    }
+
+    private Node select(Node node , int order){
+
+        int k = node.leftChild.sub_size + 1;
+
+        if(order == k) return node;
+
+        if(order > k) return select(node.rightChild,order-k);
+        else return select(node.leftChild,order);
+    }
+
+    private int rank(Node node){
+
+        Node climber = node;
+
+        int r = climber.leftChild.sub_size+1 ; 
+
+        while(climber != this.root){
+            if(climber == climber.parent.rightChild){
+                r += climber.parent.leftChild.sub_size + 1;
+            }
+            climber = climber.parent;
+        }
+        return r;
+    }
+
+    public List<V> inorderTraversal(){
+        ArrayList<V> sorted = new ArrayList<>();
+
+        inorderTraversal(sorted,this.root);
+        return sorted;
+    }
+    private void inorderTraversal(List<V> sorted,Node x){
+
+        if(x == NIL) return;
+
+        inorderTraversal(sorted,x.leftChild);
+        sorted.add((x.value));
+        inorderTraversal(sorted,x.rightChild);
+    }
+
+    @Override
+    public String toString() {
+        return "RedBlackTree [size=" + size + ", root=" + root + ", NIL=" + NIL + "]";
     }
 }
