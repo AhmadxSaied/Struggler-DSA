@@ -57,7 +57,9 @@ public class BTree<K extends Comparable<? super K>,V> {
         new_node.keys_count = minimum_degree-1;
 
         // we take the right part of the child to be splitted and insert it in the new node
-        
+                        //target
+                        //   |
+                        //   v
         // y=  | 1 | 2 | 3 | 4 | 5 | 6 | 7 |  t = 4
                         // z=  |   |   |   |        
         //       0   1   2   3   4   5   6   
@@ -130,4 +132,126 @@ public class BTree<K extends Comparable<? super K>,V> {
         else insert_not_full(temproot,key);
     }   
 
+    private void insert_not_full(BTreeNode node,K key){
+        int i = node.keys_count;
+        if(node.leaf){
+            while(i >= 0 && key.compareTo(node.Keys.get(i))<0){
+                node.Keys.add(i+1, node.Keys.get(i));
+                i --;
+            }
+            node.Keys.add(i, key);
+            node.keys_count++;
+        }else{
+            while(i >= 0 && key.compareTo(node.Keys.get(i))<0){
+                i--;
+            }
+            i++;
+            if(node.children.get(i).keys_count == 2 * minimum_degree -1){
+                split(node, i);
+                if(key.compareTo(node.Keys.get(i)) > 0)
+                    i++;
+            }
+            insert_not_full(node.children.get(i), key);
+        }
+    }
+
+    private K predecessor(BTreeNode node,int index){
+        if(index == 0 || node.leaf){
+            return null;
+        }
+        BTreeNode searchchild = node.children.get(index-1);
+        K foundkey = searchchild.Keys.get(searchchild.keys_count-1);
+        if(searchchild.leaf == true){
+            searchchild.Keys.remove(searchchild.keys_count-1);
+            searchchild.keys_count--;
+            return foundkey;
+        }
+        while(!searchchild.leaf){
+            searchchild = searchchild.children.get(searchchild.keys_count);
+        }
+        foundkey = searchchild.Keys.get(searchchild.keys_count-1);
+        searchchild.Keys.remove(searchchild.keys_count-1);
+        return foundkey;   
+    }
+
+    private K succecessor(BTreeNode node,int index){
+        if(index == 0 || node.leaf){
+            return null;
+        }
+        BTreeNode searchchild = node.children.get(index+1);
+        K foundkey = searchchild.Keys.get(0);
+        if(searchchild.leaf == true){
+            searchchild.Keys.remove(0);
+            searchchild.keys_count--;
+            return foundkey;
+        }
+        while(!searchchild.leaf){
+            searchchild = searchchild.children.get(0);
+        }
+        foundkey = searchchild.Keys.get(0);
+        return foundkey;   
+    }
+
+    public void delete(K key){
+
+    }
+
+    private void delete(BTreeNode node ,K key){
+        int i = node.keys_count;
+        if(node.leaf){
+            int j=0;
+            while(j < i && key.compareTo(node.Keys.get(j))!=0){
+                j++;
+            }
+            if(key.compareTo(node.Keys.get(j))==0){
+                node.Keys.remove(j);
+                while(j < i){
+                    node.Keys.add(j,node.Keys.get(j+1));
+                    j++;
+                }
+            }
+        }
+        int j = 0;
+        while(j < i && key.compareTo(node.Keys.get(i)) > 0){
+            j++;
+        }
+        if(key.compareTo(node.Keys.get(j)) == 0) {// we found it
+                //case a
+                if(j !=0 && node.children.get(j-1).keys_count >= minimum_degree){
+                    node.Keys.add(i, predecessor(node, i));
+                }
+                else if(j != 2 * minimum_degree -1 && node.children.get(j+1).keys_count >= minimum_degree){
+                    node.Keys.add(j,succecessor(node, j));
+                    return;
+                }
+                else{
+                    merge(node.children.get(j-1), node.children.get(j+1), node.Keys.get(j));
+                    node.Keys.remove(i);
+                    while(j < node.keys_count-1){
+                        node.Keys.add(i, node.Keys.get(i+1));
+                    }
+                    delete(node.children.get(i), key);
+                    return;
+                }
+            }
+        if(node.children.get(j).keys_count >= minimum_degree){
+            delete(node.children.get(j), key);
+            
+        }else{
+            if(node.children.get(i+1) != null){
+                
+            }
+        }
+    
+}
+    private void merge(BTreeNode nodeleft,BTreeNode noderight,K median){
+        nodeleft.Keys.add(minimum_degree-1, median);
+        for(int i = minimum_degree;i < (2 *minimum_degree -1);i++){
+            nodeleft.Keys.add(i, noderight.Keys.get(i-minimum_degree));
+        }
+        for(int i = minimum_degree -1;i <= (2 *minimum_degree -1);i++){
+            nodeleft.children.add(i, noderight.children.get(i-minimum_degree));
+        }
+        nodeleft.keys_count += noderight.keys_count+1;
+    }
 }
