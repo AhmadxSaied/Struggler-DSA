@@ -5,7 +5,7 @@ import java.util.List;
 
 public class BTree<K extends Comparable<? super K>,V> {
     private int size;
-    private int minimum_degree;
+    private final  int minimum_degree;
     private BTreeNode root;
     private class BTreeNode {
         int keys_count;
@@ -138,6 +138,7 @@ public class BTree<K extends Comparable<? super K>,V> {
             while(i >= 0 && key.compareTo(node.Keys.get(i))<0){
                 i --;
             }
+            this.size++;
             node.Keys.add(i+1, key);
             node.keys_count++;
         }else{
@@ -191,6 +192,7 @@ public class BTree<K extends Comparable<? super K>,V> {
                 node.Keys.remove(j);
                 node.keys_count--;
             }
+            this.size--;
             return;
         }
         int j = 0;
@@ -240,8 +242,7 @@ public class BTree<K extends Comparable<? super K>,V> {
             }
         }
         delete(child,key);
-
-    
+   
 }
     private void merge(BTreeNode parent,int index){
         BTreeNode leftchild = parent.children.get(index);

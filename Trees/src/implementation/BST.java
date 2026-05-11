@@ -1,3 +1,4 @@
+package implementation;
 public class BST<K extends Comparable<? super K>,V> {
     int size;
     private Node root;
@@ -61,7 +62,7 @@ public void insert(K key, V value){
 }
 public V delete(K key){
     Node deleted = search_node(key);
-    Node pluckNode = null;
+    Node pluckNode;
 
     if( deleted==null ) return null;
 
