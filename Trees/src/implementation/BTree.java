@@ -118,7 +118,9 @@ public class BTree<K extends Comparable<? super K>,V> {
 
     public void insert(K key){
         BTreeNode temproot = this.root;
+        // firstly we handle the case of a full root
         if(temproot.keys_count == 2 * minimum_degree - 1){
+            // we allocate a new root and attach the old root as its first child to insure correct splitting
             BTreeNode noderoot = new BTreeNode();
             this.root = noderoot;
             noderoot.leaf = false;
@@ -126,35 +128,44 @@ public class BTree<K extends Comparable<? super K>,V> {
 
             noderoot.children.add(0, temproot);
             split(noderoot, 0);
-
+            // we insert in our new root
             insert_not_full(noderoot,key);
         }
+        // if the root isnt full we proceed in our insertion process
         else insert_not_full(temproot,key);
     }   
 
     private void insert_not_full(BTreeNode node,K key){
+        // we have two cases either a leaf or internal node 
         int i = node.keys_count-1;
         if(node.leaf){
+            // we iterate until we can find the key that is smaller than or equal to our desired one
             while(i >= 0 && key.compareTo(node.Keys.get(i))<0){
                 i --;
             }
+            // CLRS shift but since inner implementation of arraylist already shift we dont need to do so
             this.size++;
             node.Keys.add(i+1, key);
             node.keys_count++;
         }else{
+            // if internal node we search for the key that is smaller or equal to our key
             while(i >= 0 && key.compareTo(node.Keys.get(i))<0){
                 i--;
             }
+            // we want the child on its right so we increment the i
             i++;
+            // we need to insure we are not recursing into a full node and if so we split
             if(node.children.get(i).keys_count == 2 * minimum_degree -1){
                 split(node, i);
+                // after splitting we have two desicions to choose from
+                // either the new key we are at is bigger than the key we have to insert if so increment i to go to the right child
+                // if this is not the case we recurse normally to the left child
                 if(key.compareTo(node.Keys.get(i)) > 0)
                     i++;
             }
             insert_not_full(node.children.get(i), key);
         }
     }
-
     private K predecessor(BTreeNode node,int index){
         BTreeNode searchchild = node.children.get(index);
 
