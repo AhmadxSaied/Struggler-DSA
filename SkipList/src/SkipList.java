@@ -41,7 +41,7 @@ public class SkipList {
 
         while (current_level != 0) {
 
-            while (tempIterator.right != null && tempIterator.right.val > val) {
+            while (tempIterator.right != null && tempIterator.right.val < val) {
                 tempIterator = tempIterator.right;
             }
             current_level--;
@@ -124,4 +124,25 @@ public class SkipList {
         this.head = newHead;
         this.tail = newTail;
     }
+
+    public boolean search(Integer val) {
+        SkipListNode tempIterator = this.head;
+
+        int currentlevel = this.height;
+        while (currentlevel != 0) {
+
+            while (tempIterator.val < val)
+                tempIterator = tempIterator.right;
+
+            if (tempIterator.val.equals(val))
+                return true;
+            currentlevel--;
+            tempIterator = tempIterator.down;
+        }
+        while (tempIterator.val < val)
+            tempIterator = tempIterator.right;
+
+        return tempIterator.val.equals(val);
+    }
+
 }
