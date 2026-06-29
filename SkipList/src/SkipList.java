@@ -126,6 +126,11 @@ public class SkipList {
     }
 
     public boolean search(Integer val) {
+        SkipListNode target = inner_search(val);
+        return target != null;
+    }
+
+    private SkipListNode inner_search(Integer val) {
         SkipListNode tempIterator = this.head;
 
         int currentlevel = this.height;
@@ -135,14 +140,37 @@ public class SkipList {
                 tempIterator = tempIterator.right;
 
             if (tempIterator.val.equals(val))
-                return true;
+                return tempIterator;
             currentlevel--;
             tempIterator = tempIterator.down;
         }
         while (tempIterator.val < val)
             tempIterator = tempIterator.right;
 
-        return tempIterator.val.equals(val);
+        if (tempIterator.val.equals(val))
+            return tempIterator;
+        else
+            return null;
+    }
+
+    public boolean delete(Integer val) {
+        SkipListNode target = inner_search(val);
+
+        if (target == null)
+            return false;
+
+        while (target.down != null) {
+
+            target.right.left = target.left;
+
+            target.left.right = target.right;
+
+            target.left = null;
+            target.right = null;
+
+            target = target.down;
+        }
+        return true;
     }
 
 }
