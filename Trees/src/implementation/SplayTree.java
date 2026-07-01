@@ -1,7 +1,5 @@
 package implementation;
 
-import com.sun.source.tree.Tree;
-
 public class SplayTree<K extends Comparable<? super K>, V> {
     private SplayTreeNode root;
     private int size;
@@ -12,7 +10,7 @@ public class SplayTree<K extends Comparable<? super K>, V> {
     }
 
     private class SplayTreeNode implements Comparable<SplayTreeNode> {
-        private K key;
+        private final K key;
         private V value;
         private SplayTreeNode leftchild;
         private SplayTreeNode rightchild;
@@ -34,21 +32,26 @@ public class SplayTree<K extends Comparable<? super K>, V> {
     }
 
     public V search(K key) {
+        SplayTreeNode iterNodeP = null;
         SplayTreeNode iterNode = this.root;
         if (iterNode == null)
             return null;
 
         while (iterNode != null) {
             if (iterNode.key.compareTo(key) > 0) {
+                iterNodeP = iterNode;
                 iterNode = iterNode.leftchild;
             } else if (iterNode.key.compareTo(key) < 0) {
+                iterNodeP = iterNode;
                 iterNode = iterNode.rightchild;
             } else
                 break;
         }
 
-        if (iterNode == null)
+        if (iterNode == null) {
+            splay(iterNodeP);
             return null;
+        }
 
         splay(iterNode);
         return iterNode.value;
@@ -57,10 +60,12 @@ public class SplayTree<K extends Comparable<? super K>, V> {
     public boolean insert(K key, V value) {
         if (this.root == null) {
             this.root = new SplayTreeNode(key, value);
+            this.size++;
             return true;
         }
 
-        SplayTreeNode iterNodeP, iterNode = this.root;
+        SplayTreeNode iterNodeP = null;
+        SplayTreeNode iterNode = this.root;
 
         while (iterNode != null) {
             if (iterNode.key.compareTo(key) > 0) {
@@ -69,10 +74,11 @@ public class SplayTree<K extends Comparable<? super K>, V> {
             } else if (iterNode.key.compareTo(key) < 0) {
                 iterNodeP = iterNode;
                 iterNode = iterNode.rightchild;
-            } else
+            } else {
                 iterNode.value = value;
-            splay(iterNode);
-            return false;
+                splay(iterNode);
+                return false;
+            }
         }
         SplayTreeNode newNode = new SplayTreeNode(key, value);
         if (iterNodeP.key.compareTo(key) > 0)
@@ -82,7 +88,7 @@ public class SplayTree<K extends Comparable<? super K>, V> {
 
         newNode.parent = iterNodeP;
         splay(newNode);
-
+        this.size++;
         return true;
     }
 
@@ -90,7 +96,9 @@ public class SplayTree<K extends Comparable<? super K>, V> {
         if (this.root == null)
             return false;
 
-        SplayTreeNode deletedNodeP, deletedNode = this.root;
+        SplayTreeNode deletedNodeP = null;
+        SplayTreeNode deletedNode = this.root;
+
         while (deletedNode != null) {
             if (deletedNode.key.compareTo(key) > 0) {
                 deletedNodeP = deletedNode;
@@ -101,16 +109,20 @@ public class SplayTree<K extends Comparable<? super K>, V> {
             } else
                 break;
         }
-
+        SplayTreeNode replacement = null;
         if (deletedNode != null) {
-            if (deletedNode.leftchild == null)
+            if (deletedNode.leftchild == null) {
                 transplant(deletedNode, deletedNode.rightchild);
+                replacement = deletedNode.rightchild;
+            }
 
-            if (deletedNode.rightchild == null)
+            else if (deletedNode.rightchild == null) {
                 transplant(deletedNode, deletedNode.leftchild);
+                replacement = deletedNode.leftchild;
+            }
 
             else {
-                SplayTreeNode replacement = inorderSuccessor(deletedNode);
+                replacement = inorderSuccessor(deletedNode);
 
                 if (replacement != deletedNode.rightchild) {
                     transplant(replacement, replacement.rightchild);
@@ -120,11 +132,15 @@ public class SplayTree<K extends Comparable<? super K>, V> {
                 transplant(deletedNode, replacement);
                 replacement.leftchild = deletedNode.leftchild;
                 replacement.leftchild.parent = replacement;
-            }
 
+            }
+            this.size--;
         }
-        splay(deletedNodeP);
-        return false;
+        if (replacement == null)
+            splay(deletedNodeP);
+        else
+            splay(replacement);
+        return deletedNode != null;
 
     }
 
@@ -141,5 +157,97 @@ public class SplayTree<K extends Comparable<? super K>, V> {
 
         if (replacement != null)
             replacement.parent = parent;
+    }
+
+    private SplayTreeNode inorderSuccessor(SplayTreeNode node) {
+        SplayTreeNode iterNode = node.rightchild;
+
+        while (iterNode.leftchild != null) {
+            iterNode = iterNode.leftchild;
+        }
+        return iterNode;
+    }
+
+    private void rightRotate(SplayTreeNode node) {
+        SplayTreeNode leftchild = node.leftchild;
+
+        transplant(node, leftchild);
+
+        node.parent = leftchild;
+
+        node.leftchild = leftchild.rightchild;
+
+        if (node.leftchild != null)
+            node.leftchild.parent = node;
+
+        leftchild.rightchild = node;
+        leftchild.rightchild.parent = leftchild;
+    }
+
+    private void leftRotate(SplayTreeNode node) {
+        SplayTreeNode rightchild = node.rightchild;
+
+        transplant(node, rightchild);
+
+        node.parent = rightchild;
+        node.rightchild = rightchild.leftchild;
+
+        if (node.rightchild != null)
+            node.rightchild.parent = node;
+
+        rightchild.leftchild = node;
+        rightchild.leftchild.parent = rightchild;
+    }
+
+    private void splay(SplayTreeNode node) {
+        if (node == null)
+            return;
+        while (node != this.root) {
+            SplayTreeNode parent = node.parent;
+            SplayTreeNode grandparent = node.parent.parent;
+
+            // you are a child of a root
+            if (grandparent == null) {
+                zig(node, parent);
+            } else {
+                if (parent == grandparent.leftchild) {
+
+                    // case 2 im right child thus we perform zig zag
+                    if (node == parent.rightchild) {
+                        zigzag(node, parent, grandparent);
+                    } else {
+                        zigzig(node, parent, grandparent);
+                    }
+
+                } else {
+                    if (node == parent.leftchild) {
+                        zigzag(node, parent, grandparent);
+                    } else {
+                        zigzig(node, parent, grandparent);
+                    }
+                }
+            }
+        }
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    private void zig(SplayTreeNode node, SplayTreeNode parent) {
+        if (node == parent.leftchild)
+            rightRotate(parent);
+        else
+            leftRotate(parent);
+    }
+
+    private void zigzig(SplayTreeNode node, SplayTreeNode parent, SplayTreeNode grandparent) {
+        zig(parent, grandparent);
+        zig(node, parent);
+    }
+
+    private void zigzag(SplayTreeNode node, SplayTreeNode parent, SplayTreeNode grandparent) {
+        zig(node, parent);
+        zig(node, grandparent);
     }
 }
