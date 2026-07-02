@@ -4,13 +4,13 @@ A comprehensive repository for implementing **unique and niche data structures**
 
 ---
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/t/AhmadxSaied/Strugglers-DSA?style=flat-square)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/AhmadxSaied/Struggler-DSA?style=flat-square)
 
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
-![GitHub contributors](https://img.shields.io/github/contributors/AhmadxSaied/Strugglers-DSA)
+![GitHub contributors](https://img.shields.io/github/contributors/AhmadxSaied/Struggler-DSA)
 
-![GitHub last commit](https://img.shields.io/github/last-commit/AhmadxSaied/Strugglers-DSA%3F)
+![GitHub last commit](https://img.shields.io/github/last-commit/AhmadxSaied/Struggler-DSA%3F)
 
 ---
 
