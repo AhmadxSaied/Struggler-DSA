@@ -137,4 +137,30 @@ public class AVLTree<K extends Comparable<? super K>, V> {
             replacement.parent = target.parent;
         }
     }
+
+    private void rightRotate(AVLTreeNode node) {
+        AVLTreeNode leftChild = node.leftChild;
+        node.leftChild = leftChild.rightChild;
+        transplant(node, leftChild);
+
+        if (node.leftChild != null)
+            node.leftChild.parent = node;
+
+        leftChild.rightChild = node;
+        leftChild.rightChild.parent = leftChild;
+
+    }
+
+    private void leftRotate(AVLTreeNode node) {
+        AVLTreeNode rightChild = node.rightChild;
+        node.rightChild = rightChild.leftChild;
+        transplant(node, rightChild);
+
+        if (node.rightChild != null)
+            node.rightChild.parent = node;
+
+        rightChild.leftChild = node;
+        rightChild.leftChild.parent = node;
+
+    }
 }
