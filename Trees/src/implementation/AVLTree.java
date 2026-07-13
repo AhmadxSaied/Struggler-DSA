@@ -9,8 +9,14 @@ public class AVLTree<K extends Comparable<? super K>, V> {
         this.size = 0;
     }
 
+    private int height(AVLTreeNode node) {
+        if (node == null)
+            return 0;
+        return node.height;
+    }
+
     private class AVLTreeNode implements Comparable<AVLTreeNode> {
-        private K key;
+        private final K key;
         private V value;
         private int height;
         private AVLTreeNode leftChild;
@@ -51,13 +57,15 @@ public class AVLTree<K extends Comparable<? super K>, V> {
                 return false;
             }
         }
-
+        AVLTreeNode newNode = new AVLTreeNode(key, value);
         if (insertionPoint.key.compareTo(key) > 0) {
-            insertionPoint.leftChild = new AVLTreeNode(key, value);
+            insertionPoint.leftChild = newNode;
         } else {
-            insertionPoint.rightChild = new AVLTreeNode(key, value);
+            insertionPoint.rightChild = newNode;
         }
-        fix_insertion();
+        insertionPoint.height = Math.max(height(insertionPoint.leftChild), height(insertionPoint.rightChild));
+        newNode.parent = insertionPoint;
+        fixUp(newNode);
         return true;
     }
 
@@ -65,7 +73,7 @@ public class AVLTree<K extends Comparable<? super K>, V> {
         AVLTreeNode tempItr = this.root;
 
         if (tempItr == null) {
-            return false;
+            return null;
         }
         while (tempItr != null) {
             if (tempItr.key.compareTo(key) > 0) {
@@ -103,9 +111,13 @@ public class AVLTree<K extends Comparable<? super K>, V> {
                 if (inorderSuccessor.leftChild != null)
                     inorderSuccessor.leftChild.parent = inorderSuccessor;
 
+                inorderSuccessor.height = Math.max(height(inorderSuccessor.leftChild),
+                        height(inorderSuccessor.rightChild));
+                fixUp(inorderSuccessor);
                 this.size--;
 
             }
+
             return tempItr.value;
         }
 
@@ -149,6 +161,9 @@ public class AVLTree<K extends Comparable<? super K>, V> {
         leftChild.rightChild = node;
         leftChild.rightChild.parent = leftChild;
 
+        node.height = Math.max(height(node.leftChild), height(node.rightChild));
+
+        leftChild.height = Math.max(height(leftChild.leftChild), height(leftChild.rightChild));
     }
 
     private void leftRotate(AVLTreeNode node) {
@@ -162,5 +177,71 @@ public class AVLTree<K extends Comparable<? super K>, V> {
         rightChild.leftChild = node;
         rightChild.leftChild.parent = node;
 
+        node.height = Math.max(height(node.leftChild), height(node.rightChild));
+
+        rightChild.height = Math.max(height(rightChild.leftChild), height(rightChild.rightChild));
+    }
+
+    public V search(K key) {
+        AVLTreeNode tempItr = this.root;
+
+        while (tempItr != null) {
+            if (tempItr.key.compareTo(key) > 0) {
+                tempItr = tempItr.leftChild;
+            } else if (tempItr.key.compareTo(key) < 0) {
+                tempItr = tempItr.rightChild;
+            } else {
+                return tempItr.value;
+            }
+        }
+        return null;
+    }
+
+    private int balancingFactor(AVLTreeNode node) {
+        if (node == null)
+            return 0;
+        return (height(node.rightChild) - height(node.leftChild));
+    }
+
+    private void heightUpdate(AVLTreeNode node) {
+        while (node != null) {
+            AVLTreeNode rightChild = node.rightChild;
+            AVLTreeNode leftChild = node.leftChild;
+
+            int leftHeight = leftChild == null ? 0 : leftChild.height + 1;
+            int rightHeight = rightChild == null ? 0 : rightChild.height + 1;
+
+            node.height = Math.max(leftHeight, rightHeight);
+            node = node.parent;
+        }
+    }
+
+    private void fixUp(AVLTreeNode targetNode) {
+        AVLTreeNode node = targetNode;
+        while (node != root) {
+            int balanceFactor = balancingFactor(node);
+
+            if (balanceFactor >= 2) { // right branch is deeper than left thereforer leftrotation
+
+                AVLTreeNode rightChild = node.rightChild;
+                int childFactor = balancingFactor(rightChild);
+
+                if (childFactor < 0) {
+                    rightRotate(rightChild);
+                }
+                leftRotate(node);
+
+            } else if (balanceFactor <= -2) {
+                AVLTreeNode leftChild = node.leftChild;
+                int childFactor = balancingFactor(leftChild);
+
+                if (childFactor > 0) {
+                    leftRotate(leftChild);
+                }
+                leftRotate(node);
+            }
+            node.height = Math.max(height(node.leftChild), height(node.rightChild));
+            node = node.parent;
+        }
     }
 }
