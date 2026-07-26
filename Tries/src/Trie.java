@@ -39,32 +39,33 @@ public class Trie {
 
     public void insert(String word) {
         int index = 0;
+        if (word == null || word.isEmpty())
+            return;
         this.insert(this.root, word, index);
     }
 
-    private int insert(TrieNode node, String word, int index) {
-        if (index == word.length())
-            return 1;
+    private void insert(TrieNode node, String word, int index) {
+        if (index == word.length()) {
+            node.wordEnding++;
+            return;
+        }
         int desired_char = word.charAt(index) - 'a';
         TrieNode temp = node.children.get(desired_char);
 
-        int wordEnding;
         boolean added_new = false;
         if (temp == null) {
             temp = new TrieNode(word.charAt(index));
 
             node.children.set(desired_char, temp);
-            wordEnding = this.insert(temp, word, index + 1);
+            this.insert(temp, word, index + 1);
             added_new = true;
         } else {
-            wordEnding = this.insert(temp, word, index + 1);
+            this.insert(temp, word, index + 1);
         }
 
-        temp.wordEnding += wordEnding;
         if (added_new) {
             node.immediateChildren++;
         }
-        return 0;
     }
 
     public boolean search(String pattern) {
@@ -98,7 +99,11 @@ public class Trie {
 
         if (index == word.length() - 1) {
             TrieNode finalNode = node.children.get(desired_char);
-            return finalNode != null && finalNode.wordEnding == 1 && finalNode.immediateChildren == 0;
+            if (finalNode != null && finalNode.wordEnding > 0) {
+                finalNode.wordEnding--;
+                return finalNode.immediateChildren == 0 && finalNode.wordEnding == 0;
+            }
+            return false;
         }
 
         TrieNode possibleChar = node.children.get(desired_char);
@@ -109,7 +114,7 @@ public class Trie {
         boolean deleteTrial = this.delete(possibleChar, word, index + 1);
 
         if (deleteTrial) {
-            possibleChar.children.set(index, null);
+            possibleChar.children.set(desired_char, null);
             possibleChar.immediateChildren--;
         }
         return possibleChar.immediateChildren == 0 && possibleChar.wordEnding <= 1;
